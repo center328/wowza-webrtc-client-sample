@@ -1,7 +1,8 @@
 {
-  "name": "test-app",
+  "name": "wowza-webrtc-client-react-sample",
+  "author": "Mahdi Arezoumandi",
   "version": "0.1.0",
-  "private": true,
+  "private": false,
   "dependencies": {
     "@testing-library/jest-dom": "^4.2.4",
     "@testing-library/react": "^9.3.2",
@@ -13,7 +14,8 @@
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
     "react-scripts": "3.4.3",
-    "typescript": "~3.7.2"
+    "typescript": "3.8.3",
+    "wowza-webrtc-client": "0.0.24"
   },
   "scripts": {
     "start": "react-scripts start",
