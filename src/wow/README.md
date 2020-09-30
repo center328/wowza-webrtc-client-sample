@@ -1,18 +1,4 @@
-# WoWZA WebRTC Client React Components
-
-## To install
-
-Using NPM
-
-```sh
-npm i wowza-webrtc-client-react
-```
-
-or yarn
-
-```sh
-yarn add wowza-webrtc-client-react
-```
+# WoWZA WebRTC Client React Sample Components
 
 ## Usage
 
@@ -33,7 +19,6 @@ const config: WebRTCConfiguration =  {
 **For Publishing**
 
 ```jsx
-import { WebRTCPublisher as Publisher } from 'wowza-webrtc-client-react'
 
 <Publisher id="publisher-test"
   ref="publisher"
@@ -50,8 +35,6 @@ import { WebRTCPublisher as Publisher } from 'wowza-webrtc-client-react'
 **For Playing**
 
 ```jsx
-import { WebRTCPlayer as Player } from 'wowza-webrtc-client-react'
-
 <Player
   id="player-test"
   ref="player"
