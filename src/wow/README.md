@@ -1,5 +1,7 @@
 # WoWZA WebRTC Client React Sample Components
 
+## Author 
+    Arezoumandi.m@gmail.com "Mahdi Arezoumandi"
 ## Usage
 
 **Prepare Configuration**
