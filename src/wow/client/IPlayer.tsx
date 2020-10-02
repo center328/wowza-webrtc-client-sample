@@ -1,16 +1,22 @@
 export interface IPlayerStatus {
-  isMuted?: boolean
   isPlaying: boolean
+  isConnected: boolean
   error?: Error
 }
 
 type PlayerStateChanged = (status: IPlayerStatus) => void
 
 export interface IPlayerProps {
-  streamName?: string
-  disableAudio: boolean
+  trace?: boolean
+  mute: boolean
   autoPlay: boolean
   onPlayerStateChanged?: PlayerStateChanged
+}
+
+export interface WebRTCConfigurationPlayer {
+  sdpURL: string
+  applicationName: string
+  streamName: string
 }
 
 export interface IPlayer {
@@ -25,8 +31,4 @@ export interface IPlayer {
    */
   stop(): void
 
-  /**
-   * Player error.
-   */
-  error?: Error
 }

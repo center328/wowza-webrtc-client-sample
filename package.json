@@ -15,7 +15,7 @@
     "react-dom": "^16.13.1",
     "react-scripts": "3.4.3",
     "typescript": "3.8.3",
-    "wowza-webrtc-client": "0.0.24"
+    "webrtc-adapter": "^7.7.0"
   },
   "scripts": {
     "start": "react-scripts start",

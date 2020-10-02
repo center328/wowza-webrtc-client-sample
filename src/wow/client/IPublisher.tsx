@@ -1,24 +1,26 @@
-export type CameraSource = 'user'|'environment'|'any'
-
 export interface IPublisherStatus {
-  isHolding: boolean
-  isCameraReady: boolean
   isPublishing: boolean
   isPreviewEnabled: boolean
   publisherError: Error|undefined
 }
 
-export interface WebRTCPublisherStatus extends IPublisherStatus {
-  usingCamera: CameraSource
+export interface WebRTCConfigurationPublisher {
+  sdpURL: string
+  applicationName: string
+  streamName: string
+  audioBitrate: string
+  audioCodec: string
+  videoBitrate: string
+  videoCodec: string
+  videoFrameRate: string
+  frameSize: string
 }
 
 export type IVideoStateChanged = (status: IPublisherStatus) => void
 
-export type WebRTCVideoStateChanged = (status: WebRTCPublisherStatus) => void
+export type WebRTCVideoStateChanged = (status: IPublisherStatus) => void
 
 export interface IPublisher {
-
-  hold(value: boolean): void
 
   publish(streamName: string): Promise<void>
 

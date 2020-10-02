@@ -1,44 +1,28 @@
 import * as React from 'react'
-import { WebRTCPlayer as Player, WebRTCConfiguration } from 'wowza-webrtc-client'
-import { IPlayerProps, IPlayer } from './IPlayer'
+import {IPlayerProps, IPlayer, WebRTCConfigurationPlayer, IPlayerStatus} from './IPlayer';
+import {Player} from '../../lib/player';
 
 interface Props extends IPlayerProps {
   id: string
   style?: React.CSSProperties,      // Html CSS Properties
-  streamName?: string
-  videoRatio: number
-  disableAudio: boolean
-  autoPlay: boolean
   rotate: 'none'|'ccw'|'cw'|'flip'
   sizing: 'cover'|'contain'
-  config: WebRTCConfiguration
-  showUnmuteButton: boolean
-  showErrorOverlay: boolean
+  config: WebRTCConfigurationPlayer
   className: string
 }
 
-interface State {
-  loadCount: number
-  isMuted?: boolean
-  isPlaying: boolean
-  error?: Error
+interface State extends IPlayerStatus {
   videoStyle: React.CSSProperties
 }
 
 export class WebRTCPlayer extends React.Component<Props, State> implements IPlayer {
 
   public static defaultProps: Partial<Props> = {
-    disableAudio: false,
+    mute: false,
     autoPlay: true,
     rotate: 'none',
-    showUnmuteButton: true,
-    showErrorOverlay: true,
+    sizing: 'contain',
     className: '',
-    sizing: 'contain'
-  }
-
-  public get isPlaying(): boolean {
-    return this.playerInterface && this.playerInterface.isPlaying || false
   }
 
   private get videoElement(): HTMLVideoElement|undefined {
@@ -60,8 +44,9 @@ export class WebRTCPlayer extends React.Component<Props, State> implements IPlay
   constructor(props: Props) {
     super(props)
     this.state = {
-      loadCount: 0,
       isPlaying: false,
+      isConnected: false,
+      error: undefined,
       videoStyle: {
         width: '100%',
         height: '100%'
@@ -70,7 +55,7 @@ export class WebRTCPlayer extends React.Component<Props, State> implements IPlay
   }
 
   componentDidMount() {
-    this._initPlayer(this.props.autoPlay)
+    this._initPlayer()
 
     // register a resize handler.
     this.resizeHandler = () => {
@@ -167,72 +152,96 @@ export class WebRTCPlayer extends React.Component<Props, State> implements IPlay
     window.addEventListener('resize', this.resizeHandler)
   }
 
-  componentWillUnmount() {
+  async componentWillUnmount() {
     // unregister a resize handler.
+
+    await this.stop()
     window.removeEventListener('resize', this.resizeHandler)
+
   }
 
-  private _initPlayer(autoPlay: boolean) {
+  private _notify = () => {
+    this.resizeHandler && this.resizeHandler()
+    this.props.onPlayerStateChanged && this.props.onPlayerStateChanged(this.state)
+  }
+
+  private _initPlayer() {
     if (!this.videoElement) {
       return
     }
+
     // Create a new instance
-    this.playerInterface = new Player(this.props.config, this.videoElement, ({ isMuted, isPlaying, error }) => {
-      this.setState({ isMuted, isPlaying, error })
-      this.props.onPlayerStateChanged && this.props.onPlayerStateChanged({ isMuted, isPlaying, error })
-      this.resizeHandler && this.resizeHandler()
-    })
-    if (autoPlay) {
-      setTimeout(this.play.bind(this), 3000)
+    this.playerInterface = new Player(
+        this.props.trace,
+        this.props.config,
+        this.videoElement,
+        (connected: boolean) => {
+          this.setState({ isConnected: connected })
+          this._notify()
+        }, (isPlaying: boolean) => {
+          this.setState({ isPlaying })
+          this._notify()
+        }, (error: Error) => {
+          this.setState({ error })
+          this._notify()
+        })
+
+    if (this.props.autoPlay) {
+      setTimeout(this.play.bind(this), 8000)
     }
   }
 
-  public play() {
-    const streamName = this.props.streamName
-    console.log(streamName)
-    if (!streamName) {
-      throw new Error('Stream Name is required.')
-    }
-    this.playerInterface && this.playerInterface.connect(streamName)
+  public getStatus(): IPlayerStatus {
+    return this.state
   }
 
-  public stop() {
-    this.playerInterface && this.playerInterface.stop()
+  public async play() {
+    this.setState({error: undefined})
+    this.playerInterface && await this.playerInterface.togglePlay()
+  }
+
+  public async stop() {
+    this.setState({error: undefined})
+    this.playerInterface && await this.playerInterface.stop()
   }
 
   render() {
-    return <div id={ this.props.id }
-        ref={this._refFrame}
-        style={{ ...this.props.style }}
-        className={`webrtc-player ${this.props.sizing} ${this.props.className}`}>
-      <video
-        ref={this._refVideo}
-        playsInline autoPlay
-        className={this.props.rotate}
-        style={this.state.videoStyle}
-        />
-      {
-        this.playerInterface && this.state.isMuted &&
-        <div className="unmute-blocker d-flex justify-content-center align-items-center"
-            onClick={() => this.playerInterface && (this.playerInterface.isMuted = false) }>
-          { this.props.children }
-          {
-            this.props.showUnmuteButton &&
-            <button className="btn btn-danger"><i className="fas fa-volume-mute"></i> TAP TO UNMUTE</button>
-          }
+    return <div
+        style={{backgroundColor: this.state.isPlaying ? '' : 'red' }}
+    >
+        <div id={ this.props.id }
+          ref={this._refFrame}
+          style={{ ...this.props.style }}
+          className={`webrtc-player ${this.props.sizing} ${this.props.className}`}
+        >
+           {/*onClick={this.play.bind(this)}>*/}
+          <video
+              ref={this._refVideo}
+              playsInline autoPlay
+              // controls
+              muted={this.props.mute}
+              className={this.props.rotate}
+              style={this.state.videoStyle}
+          />
         </div>
-      }
+
       {
-        this.state.error &&
+        this.state.error && this.state.error.message !== '' &&
         <div className="unmute-blocker d-flex justify-content-center align-items-center"
-            onClick={this.play.bind(this)}>
-          {
-            this.props.showErrorOverlay &&
+             onClick={this.play.bind(this)}>
             <p className="text-danger text-center">
               {`${this.state.error.message}`}<br/><br/>
               <button className="btn btn-danger"><i className="fas redo-alt"></i> TAP TO RETRY</button>
             </p>
-          }
+        </div>
+      }
+      {
+        (!this.state.isPlaying && (this.state.error === null || this.state.error === undefined)) &&
+        <div className="unmute-blocker d-flex justify-content-center align-items-center"
+             onClick={this.play.bind(this)}>
+            <p className="text-danger text-center">
+              <button className="btn btn-danger"><i className="fas redo-alt"></i> TAP TO Connect</button>
+            </p>
         </div>
       }
     </div>

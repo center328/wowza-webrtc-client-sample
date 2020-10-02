@@ -1,21 +1,23 @@
 import React from 'react';
-import { WebRTCConfiguration } from 'wowza-webrtc-client'
-import { WebRTCPublisher as Publisher } from './client'
+import {WebRTCConfigurationPublisher, WebRTCPublisher as Publisher} from './client'
 
-const config: WebRTCConfiguration =  {
-  WEBRTC_SDP_URL: 'wss://str.darsapp.me/webrtc-session.json',
-  WEBRTC_APPLICATION_NAME: 'livx',
-  WEBRTC_FRAME_RATE: 30,
-  WEBRTC_AUDIO_BIT_RATE: 64,
-  WEBRTC_VIDEO_BIT_RATE: 3500,
+const config: WebRTCConfigurationPublisher =  {
+    sdpURL: 'wss://str.darsapp.me/webrtc-session.json',
+    applicationName: 'livx',
+    streamName: 'mahdia',
+    audioBitrate: '24',
+    audioCodec: 'opus',
+    videoBitrate: '200',
+    videoCodec: '42e01f',
+    videoFrameRate: '10',
+    frameSize: 'default'
 }
 
 function Publish() {
   return (
       <Publisher id="publisher-test"
                  className="d-block"
-                 streamName="WebRTC"
-                 style={{ width: '100%', height: '100%'}}
+                 style={{ width: '60vh', height: '60vh'}}
                  config={ config }
                  onVideoStateChanged={(state) => {
                    console.log('Publisher state has changed', state)
